@@ -1,5 +1,2 @@
 [workspace]
-members = [
-    "frontend",
-    "actions-bot",
-]
+members = ["frontend", "actions-bot", "shared"]
