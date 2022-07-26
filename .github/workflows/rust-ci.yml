@@ -12,7 +12,7 @@ env:
     RUSTFLAGS: -D warnings
 
 jobs:
-    build:
+    build-actions-bot:
         strategy:
             matrix:
                 os: [ubuntu-latest]
@@ -38,6 +38,47 @@ jobs:
               with:
                   command: build
                   args: ${{ env.MODE }} --verbose
+    build-frontend:
+        defaults:
+            run:
+                working-directory: frontend/
+        strategy:
+            matrix:
+                os: [ubuntu-latest]
+                toolchain: [nightly]
+                mode: [release, debug]
+        env:
+            NODE_ENV: "production"
+        name: trunk-build ${{ matrix.os }}-${{ matrix.toolchain}} ${{ matrix.mode }}
+        runs-on: ${{ matrix.os }}
+        steps:
+            - uses: actions/checkout@v2
+            - name: set compile mode
+              shell: bash
+              run: |
+                  if [ ${{matrix.mode}} = "release" ] ; then
+                    echo "MODE=--release" >> $GITHUB_ENV
+                  fi
+            - name: Setup Node.js environment
+              uses: actions/setup-node@v3.4.1
+              with:
+                  cache: "npm"
+                  cache-dependency-path: frontend/package-lock.json
+                  node-version: 16
+            - run: npm install -g tailwindcss
+            - uses: actions-rs/toolchain@v1
+              with:
+                  profile: minimal
+                  toolchain: ${{ matrix.toolchain }}
+                  target: wasm32-unknown-unknown
+                  override: true
+            - uses: actions-rs/install@v0.1
+              with:
+                  crate: trunk
+                  version: latest
+                  use-tool-cache: true
+            - name: trunk build
+              run: trunk build ${{ env.MODE }}
     doc:
         strategy:
             matrix:
@@ -131,7 +172,8 @@ jobs:
                   args: ${{ env.MODE }} --verbose
     rust-ci-done:
         needs:
-            - build
+            - build-actions-bot
+            - build-frontend
             - doc
             - test
             - fmt
