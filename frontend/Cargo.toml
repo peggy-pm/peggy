@@ -9,3 +9,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 yew = "0.19"
+yew-agent = "0.1"
+console_log = { version = "0.2", features = ["color"] }
+log = { version = "0.4", features = ["std"] }
+anyhow = { version = "1", features = ["std"] }
